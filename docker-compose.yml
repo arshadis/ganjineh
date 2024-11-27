@@ -1,25 +1,114 @@
-version: '3'
 services:
-  rabbitmq:
-    image: rabbitmq:management
-    container_name: rabbitmq
-    ports:
-      - "5672:5672"
-      - "15672:15672"
+# 
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.2
+    container_name: elasticsearch
     environment:
-      RABBITMQ_DEFAULT_USER: user
-      RABBITMQ_DEFAULT_PASS: password
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    depends_on:
+      - rabbitmq    
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - elk
+# 
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.15.2
+    container_name: logstash
+    
+    volumes:
+      - ./logstash/pipeline:/usr/share/logstash/pipeline
+    ports:
+      - "6000:6000"
+      - "9600:9600"
+    networks:
+      - elk
+    depends_on:
+      - elasticsearch
+      - rabbitmq
+# 
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.15.2
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    networks:
+      - elk
+    depends_on:
+      - elasticsearch
 
-  producer:
-    build:
-      context: .
-      dockerfile: Dockerfile.send
+# 
+  postgres:
+    image: postgres:15
+    container_name: firstsql
+    hostname: postgres
+    env_file: ".env"
+
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+        - elk
+# 
+  rabbitmq:
+    image: rabbitmq:4.0-management
+    container_name: rabbitmq
+
+    ports:
+        - 5673:5672
+        - 15672:15672
+    volumes:
+        - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+        - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+    networks:
+        - elk
+
+# 
+  myflask:
+    build: .
+    container_name: producer
     depends_on:
       - rabbitmq
+    env_file: ".env"
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+    networks:
+        - elk
 
   consumer:
-    build:
-      context: .
-      dockerfile: Dockerfile.recive
+    build: 
+      dockerfile: Dockerfile.cons
+    container_name: consumer
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
     depends_on:
-      - rabbitmq
+      - elasticsearch
+    env_file: ".env"
+    networks:
+        - elk
+
+
+# 
+networks:
+  elk:
+    driver: bridge
+
+volumes:
+  esdata:
+    driver: local
+  pgdata:
