@@ -1,40 +1,57 @@
-## Introduction:
-* 👋 Hey everyone! Welcome back to my GitHub.
-* 🎥 This repo shows you how to install the ELK Stack using Docker Compose.
-* 📊 ELK Stack stands for Elasticsearch, Logstash, and Kibana, and it's great for data analysis and visualization.
+# RELK Project README
 
+## Introduction
 
-## Prerequisites:
-* 💻 A computer with Docker and Docker Compose installed.
-* 📁 Basic understanding of Docker and command-line interface.
+Welcome to the **RELK** repository! This project demonstrates how to connect the ELK Stack (Elasticsearch, Logstash, Kibana) with RabbitMQ to send data from a producer to a consumer and store it in a PostgreSQL database.
 
-## Steps:
-**1. Create a Docker Compose file:**
-    * Open your terminal and create a new directory for your ELK Stack setup.
-    * Inside the directory, create a file named docker-compose.yml 📝.
+---
 
-**2. Define services:**
-    * Open docker-compose.yml and define the services for Elasticsearch, Logstash, and Kibana.
-    * Use the following configuration:
+## Prerequisites
 
-**3. Get the codes/scripts from this repo.**   
+- **Docker and Docker Compose**: Ensure these are installed on your system.
+- **Basic Knowledge**: Familiarity with Docker and the command-line interface is helpful.
 
-**4. Create Logstash pipeline:**
-    * Create a directory named logstash-pipeline and inside it, create a file named logstash.conf 📝.
-    * Add the pipeline configuration from this repo.  
+---
 
-**5. Run Docker Compose:**
-    * In your terminal, navigate to your project directory and run docker-compose up -d 🐳.
-    * Docker Compose will pull the necessary images and start the containers
+## Steps
 
-**6. Access Kibana:**
-    * Open your browser and go to http://localhost:5601 🌐.
-    * You should see the Kibana interface.
+### 1. Create a Flask Project
+- Develop a Flask application to handle JSON data.
+- Use Postman (or similar tools) to send JSON data. Example data structure:
+  ```json
+  {
+    "username": "example",
+    "password": "password123",
+    "age": 25,
+    "region": "North"
+  }
+  ```
+- To retrieve database entries, send the following request:
+  ```json
+  {"show": "mytable"}
+  ```
 
-## Troubleshooting:
-* 🚨 Make sure Docker is running and you have sufficient resources allocated.
-* 🛠️ Check container logs using docker logs <container_name> if something goes wrong.
+### 2. Set Up RabbitMQ
+- Create a RabbitMQ container to queue data from the producer and send it to ELK.
 
-## Outro:
-* 🎉 Congrats! You have successfully installed the ELK Stack using Docker Compose.
-* 💬 Leave any questions or comments down below, and I'll be happy to help!
+### 3. Configure Logstash
+- Use Logstash for logging and data pipeline management.
+- The repository includes a `logstash.conf` file to pipeline data from the producer and consumer, forwarding it to Elasticsearch.
+
+### 4. Deploy Elasticsearch
+- Set up an Elasticsearch container as the search and analytics engine to index, store, and enable querying of data.
+
+### 5. Access Kibana
+- Open your browser and navigate to [http://localhost:5601](http://localhost:5601) to visualize and explore the data.
+
+### 6. Develop the Consumer
+- Create a consumer to process incoming data from RabbitMQ and query the PostgreSQL database.
+
+### 7. Set Up PostgreSQL
+- Use PostgreSQL as the database to store the processed data.
+
+---
+
+## Conclusion
+
+Congratulations! You now have a fully functioning **RELK** stack. Feel free to reach out with any questions or comments—I’m happy to help!
